@@ -45,7 +45,16 @@ function insert_after()
     awk "// { print } ; /$1/ { print \"\n$2 $3\" }"
 }
 
+if [[ $# -ne 1 ]]; then
+    echo "Usage: $0 <cache>" >&2
+    exit 64
+fi
+
 CACHE_ID=`echo "$1" | sed -E 's!^/dev/(mapper/)?!!' | tr / -`
+if ! dmsetup status | grep -q "${CACHE_ID}:" ; then
+    echo "Cache ${CACHE_ID} not found." >&2
+    exit 66
+fi
 CACHE_STATS=$(paste <(echo "$FIELDS") <(dmsetup status | grep "${CACHE_ID}:" | sed -r -e 's/.*: (.*)/\1/' | tr ' ' '\n' | head -n${FIELD_COUNT}))
 
 # calculate cache hit percentage
